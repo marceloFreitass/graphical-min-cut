@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
 from matplotlib.widgets import Button
 
 class DraggableGraph:
@@ -17,7 +18,7 @@ class DraggableGraph:
         self.initial_nodes = []
         for n in self.G.nodes:
             self.initial_nodes.append(f"{n}")
-        print(self.initial_nodes)
+        # print(self.initial_nodes)
                     # for n in self.G.nodes:
                 # print(n)
         
@@ -67,7 +68,7 @@ class DraggableGraph:
         return (count == len(list1))
     def find_nodes(self, node1, node2):
         # return
-        print(f"Node1: {node1}, Node2: {node2}")
+        # print(f"Node1: {node1}, Node2: {node2}")
         nodes = []
         print(self.initial_nodes)
         for n in self.initial_nodes:
@@ -76,36 +77,27 @@ class DraggableGraph:
                 nodes.append(n)
 
             # if(node1 in n.split(",") or node2 in n.split(",")):
-        print(f"FIND! :  {nodes}")
+        # print(f"FIND! :  {nodes}")
         return nodes
         # print("FIND!")
         # print(nodes)
 
     def on_key_press(self, event):
-
+        
         if event.key == 'enter':
-            print("A")
             self.fuse_max_edge_to_merged()
-            # for n in self.G.nodes:
-                # print(f"N: {n}, tipo: {type(n)}")
-            # print(self.G.nodes)
             if(len(self.G.nodes) == 1):
 
                 aux_1 = list(self.G.nodes)[0]
-                print(self.merged_nodes)
-                # print("AUX1:")
-                # print(aux_1)
+                self.last_merged_nodes = self.find_nodes(self.merged_nodes[-3], self.merged_nodes[-1])
                 aux = aux_1.split(",")
-
-                # self.last_merged_nodes = [aux[-2], aux[-1]]
-
-                # print(self.find_nodes(aux[-2], aux[-1]))
-                self.last_merged_nodes = self.find_nodes(aux[-2], aux[-1])
-                print("Last merged")
-                print(self.last_merged_nodes)
+                print(f"Shrink: {self.last_merged_nodes}")
                 self.shrink_last_merged()
                 self.reset_graph()
-
+        if event.key == "backspace":
+            while(len(self.G.nodes) > 2):
+                self.fuse_max_edge_to_merged()
+                # time.sleep(1)
 
 
     def fuse_max_edge_to_merged(self):
@@ -118,20 +110,39 @@ class DraggableGraph:
             
             # print("A")
             self.merged_node = f"{self.merged_node},{max_edge_node}"  # Atualiza o nó fundido
+    def find_smallest_number(self, node1, node2):
+        l1 = node1.split(",")
+        l2 = node2.split(",")
+        small_1 = 9999999999999
+        small_2 = 9999999999999
+
+        for i in l1:
+            if(int(i) < small_1):
+                small_1 = int(i)
+        for i in l2:
+            if(int(i) < small_2):
+                small_2 = int(i)
+        return [small_1, small_2]
 
     def find_max_edge_node(self, target):
         max_weight = float('-inf')
         max_edge_node = None
         for neighbor in self.G.neighbors(target):
             weight = self.G[target][neighbor]["weight"]
-            if weight > max_weight:
+            if weight > max_weight + 0.000001:
                 max_weight = weight
                 max_edge_node = neighbor
+            elif abs(weight - max_weight) < 0.000001:
+                max_weight = weight
+                s1, s2 = self.find_smallest_number(neighbor, max_edge_node)
+                if(s1 < s2):
+                    max_edge_node = neighbor
         return max_edge_node
 
     def merge_nodes(self, node1, node2):
         self.merged_nodes.append(node1)
         self.merged_nodes.append(node2)
+        print(f"Node: {node2}")
         new_node = f"{node1},{node2}"
         edges = {}
 
@@ -161,12 +172,12 @@ class DraggableGraph:
         self.pos = self.original_pos.copy()
         self.merged_node = "0"
         self.merged_nodes = []
-        print(f" Vetor de nos shrinkados{self.shrinked_nodes}")
+        # print(f" Vetor de nos shrinkados{self.shrinked_nodes}")
         for i in range(len(self.shrinked_nodes)):
             nodes = self.shrinked_nodes[i]
-            print(nodes)
+            # print(nodes)
             self.merge_nodes(nodes[0], nodes[1])
-            print("MERGIOU")
+            # print("MERGIOU")
             # input()
         self.initial_nodes = []
         for n in self.G.nodes:
@@ -197,7 +208,7 @@ def plot_graph(n, matrix):
     G = nx.Graph()
 
     G.add_nodes_from(list(map(str, range(n))))
-    print(G.nodes)
+    # print(G.nodes)
     for i in range(n):
         for j in range(i + 1, n):
             if matrix[i][j] != 0:
